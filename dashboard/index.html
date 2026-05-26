@@ -162,6 +162,28 @@
   }
   .hire-btn:hover { transform: translateY(-1px); box-shadow: 0 0 24px rgba(255,92,31,0.45); }
   .hire-btn:active { transform: translateY(0); }
+
+  .roadmap-btn {
+    appearance: none;
+    background: transparent;
+    color: var(--paper);
+    border: 1px solid var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 14px 22px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 2px;
+    transition: all 0.18s ease;
+  }
+  .roadmap-btn:hover { background: var(--paper); color: var(--ink); }
+  .toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .hire-btn .plus {
     display: inline-grid; place-items: center;
     width: 20px; height: 20px;
@@ -423,7 +445,10 @@
     <button class="chip" data-filter="idle">Idle</button>
     <button class="chip" data-filter="draft">Draft</button>
   </div>
-  <button class="hire-btn" id="open-hire"><span class="plus">+</span> Hire new agent</button>
+  <div class="toolbar-actions">
+    <a class="roadmap-btn" href="/kanban">Roadmap →</a>
+    <button class="hire-btn" id="open-hire"><span class="plus">+</span> Hire new agent</button>
+  </div>
 </div>
 
 <main>

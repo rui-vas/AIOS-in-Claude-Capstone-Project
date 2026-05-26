@@ -77,6 +77,9 @@ const server = serve({
     if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
       return new Response(file(join(HERE, "index.html")));
     }
+    if (req.method === "GET" && (url.pathname === "/kanban" || url.pathname === "/kanban.html")) {
+      return new Response(file(join(HERE, "kanban.html")));
+    }
 
     // List existing agents
     if (req.method === "GET" && url.pathname === "/api/agents") {

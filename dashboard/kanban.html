@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI OS — Roadmap Kanban</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0b0b0c;
+    --ink-2: #131316;
+    --line: #25262b;
+    --line-2: #1a1b1f;
+    --paper: #f3eee5;
+    --mute: #8a8a92;
+    --accent: #ff5c1f;
+    --accent-soft: #ffb89a;
+    --good: #a8d97a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--ink); color: var(--paper); }
+  body {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(255,92,31,0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(168,217,122,0.06), transparent 60%),
+      var(--ink);
+    overflow-x: hidden;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    z-index: 100;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mute);
+    position: sticky; top: 0;
+    background: rgba(11,11,12,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .topbar .center { text-align: center; color: var(--paper); }
+  .topbar .right { text-align: right; display: flex; justify-content: flex-end; gap: 18px; }
+  .topbar a { color: var(--mute); text-decoration: none; transition: color 0.18s ease; }
+  .topbar a:hover, .topbar a.active { color: var(--paper); }
+  .topbar a.active { color: var(--accent); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--good); margin-right: 8px; box-shadow: 0 0 12px var(--good); animation: pulse 2.4s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .hero {
+    padding: 64px 28px 40px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .hero .label {
+    color: var(--mute);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(44px, 8vw, 108px);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin: 0 0 18px;
+  }
+  .hero h1 em { color: var(--accent); font-style: italic; }
+  .hero p {
+    font-size: 14px;
+    color: var(--mute);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .hero p span { color: var(--paper); }
+
+  .crosshair { position: absolute; width: 14px; height: 14px; }
+  .crosshair::before, .crosshair::after { content: ""; position: absolute; background: var(--paper); opacity: 0.4; }
+  .crosshair::before { left: 0; right: 0; top: 50%; height: 1px; }
+  .crosshair::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--line);
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .stats {
+    display: flex; gap: 32px;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--mute);
+  }
+  .stats .num { display: block; color: var(--paper); font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1; letter-spacing: -0.01em; margin-top: 4px; }
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; max-width: 65%; }
+  .chip {
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--mute);
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.18s ease;
+    background: transparent;
+    font-family: inherit;
+  }
+  .chip:hover { color: var(--paper); border-color: var(--paper); }
+  .chip.active { color: var(--ink); background: var(--paper); border-color: var(--paper); }
+
+  /* Board */
+  main { padding: 24px 28px 40px; }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    min-height: 60vh;
+  }
+  .column {
+    background: var(--ink);
+    padding: 22px 18px 28px;
+    display: flex; flex-direction: column;
+    min-height: 60vh;
+  }
+  .column.drag-over { background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--accent); }
+  .col-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .col-head .title {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--mute);
+  }
+  .col-head .title em { color: var(--paper); font-style: normal; }
+  .column[data-col="doing"] .col-head .title em { color: var(--accent); }
+  .column[data-col="done"]  .col-head .title em { color: var(--good); }
+  .col-head .count {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px; line-height: 1;
+    color: var(--paper);
+  }
+
+  .col-body { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+
+  /* Card */
+  .task {
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--mute);
+    padding: 12px 14px;
+    cursor: grab;
+    position: relative;
+    transition: transform 0.12s ease, border-color 0.18s ease, background 0.18s ease;
+  }
+  .task:hover { border-color: var(--paper); background: #17181c; }
+  .task:active { cursor: grabbing; }
+  .task.dragging { opacity: 0.35; }
+  .task .layer {
+    font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--mute);
+    margin-bottom: 6px;
+    display: flex; justify-content: space-between;
+  }
+  .task .layer .layer-name { color: var(--accent); }
+  .task .text {
+    font-size: 13px; line-height: 1.4;
+    color: var(--paper);
+  }
+  .task .actions {
+    display: none; gap: 6px;
+    margin-top: 10px;
+  }
+  .task:hover .actions { display: flex; }
+  .task .act {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--mute);
+    font-family: inherit;
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .task .act:hover { color: var(--paper); border-color: var(--paper); }
+  .task .act.del:hover { color: #d94d4d; border-color: #d94d4d; }
+
+  .column[data-col="doing"] .task { border-left-color: var(--accent); }
+  .column[data-col="done"]  .task { border-left-color: var(--good); }
+  .column[data-col="done"]  .task .text { color: var(--mute); text-decoration: line-through; text-decoration-color: var(--line); }
+
+  /* Empty hint */
+  .empty-hint {
+    border: 1px dashed var(--line);
+    color: var(--mute);
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    text-align: center;
+    padding: 24px 12px;
+    margin-top: 4px;
+  }
+
+  /* Add card */
+  .add-card {
+    appearance: none;
+    width: 100%;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 8px, rgba(255,92,31,0.04) 8px 9px),
+      transparent;
+    border: 1px solid var(--line);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.18s ease;
+  }
+  .add-card:hover { border-color: var(--accent); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--ink-2); border: 1px solid var(--accent);
+    color: var(--paper); padding: 12px 16px;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    z-index: 300; opacity: 0; transform: translateY(8px);
+    transition: all 0.25s ease;
+    max-width: 380px;
+  }
+  .toast.show { opacity: 1; transform: none; }
+
+  /* Reset bar */
+  .reset {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--mute);
+    font-family: inherit;
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .reset:hover { color: #d94d4d; border-color: #d94d4d; }
+
+  footer {
+    padding: 24px 28px;
+    border-top: 1px solid var(--line);
+    color: var(--mute);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+
+  @media (max-width: 920px) {
+    .board { grid-template-columns: 1fr; }
+    .column { min-height: 0; }
+    .filter-row { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left"><span class="dot"></span>SYSTEM ONLINE — <span id="clock">--:--:--</span></div>
+  <div class="center">AI · OPERATING · SYSTEM</div>
+  <div class="right">
+    <a href="/">Roster</a>
+    <a href="/kanban" class="active">Roadmap</a>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="crosshair" style="top:20px; left:20px;"></div>
+  <div class="crosshair" style="top:20px; right:20px;"></div>
+  <div class="label">// Roadmap — what the OS still has to ship</div>
+  <h1>The <em>build</em> board.</h1>
+  <p><span>Every layer of the AI OS, broken into shippable units.</span> Drag a card to move it. Add your own. State persists locally — this is the operator's plan, not a ticket system.</p>
+</section>
+
+<div class="toolbar">
+  <div class="stats">
+    <div>Total <span class="num" id="stat-total">0</span></div>
+    <div>Doing <span class="num" id="stat-doing">0</span></div>
+    <div>Done <span class="num" id="stat-done">0</span></div>
+  </div>
+  <div class="filter-row" id="filter-row">
+    <button class="chip active" data-layer="all">All</button>
+  </div>
+  <button class="reset" id="reset-btn">↺ Reset to seed</button>
+</div>
+
+<main>
+  <div class="board" id="board">
+    <div class="column" data-col="todo">
+      <div class="col-head"><span class="title">// <em>Todo</em></span><span class="count" data-count="todo">0</span></div>
+      <div class="col-body" data-body="todo"></div>
+      <button class="add-card" data-add="todo">+ Add task</button>
+    </div>
+    <div class="column" data-col="doing">
+      <div class="col-head"><span class="title">// <em>Doing</em></span><span class="count" data-count="doing">0</span></div>
+      <div class="col-body" data-body="doing"></div>
+      <button class="add-card" data-add="doing">+ Add task</button>
+    </div>
+    <div class="column" data-col="done">
+      <div class="col-head"><span class="title">// <em>Done</em></span><span class="count" data-count="done">0</span></div>
+      <div class="col-body" data-body="done"></div>
+      <button class="add-card" data-add="done">+ Add task</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div>AI OS // CAPSTONE</div>
+  <div>ROADMAP BOARD · LOCAL STATE</div>
+</footer>
+
+<script>
+  // --- clock
+  const clock = document.getElementById('clock');
+  const tick = () => clock.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+  tick(); setInterval(tick, 1000);
+
+  // --- seed tasks (from README TODO)
+  const SEED = [
+    // 1. Runtime & orchestration
+    ['Runtime', 'Agent loop (plan → tool → observe → repeat) with a chosen base model'],
+    ['Runtime', 'Multi-agent dispatch (primary agent spawns sub-agents for parallel work)'],
+    ['Runtime', 'Long-horizon task execution with checkpointing (resume after restart)'],
+    ['Runtime', 'Worktree / isolation per task so agents don\'t trample each other'],
+    ['Runtime', 'Cost & token accounting per agent / per task'],
+    // 2. Skills library
+    ['Skills', 'Catalog of reusable skills with name, description, when-to-use'],
+    ['Skills', 'Process skills: brainstorming, planning, debugging, code review, verification'],
+    ['Skills', 'Writing skills: brand voice, anti-AI style, channel-specific tone'],
+    ['Skills', 'Workflow skills: research, summarization, scheduling, drafting'],
+    ['Skills', 'Skill discovery: agent reads index at session start, loads on demand'],
+    ['Skills', 'Skill versioning so old agents don\'t break when a skill evolves'],
+    // 3. Memory
+    ['Memory', 'Short-term: conversation context, current task state'],
+    ['Memory', 'Long-term: facts about the user, preferences, feedback, project state'],
+    ['Memory', 'Episodic: what happened in past sessions, decisions made, why'],
+    ['Memory', 'Semantic search across memory (vector store)'],
+    ['Memory', 'Memory hygiene: dedupe, decay stale entries, resolve conflicts'],
+    ['Memory', 'Per-employee memory namespace (Marta\'s memory ≠ research agent\'s)'],
+    // 4. Channels
+    ['Channels', 'Telegram — bot working, needs richer attachment handling'],
+    ['Channels', 'WhatsApp — spec only, needs implementation'],
+    ['Channels', 'iMessage — Mac-only, allowlist-based'],
+    ['Channels', 'Email (inbound + outbound) via Gmail'],
+    ['Channels', 'Voice in: transcription pipeline (whisper.cpp)'],
+    ['Channels', 'Voice out: TTS reply option'],
+    ['Channels', 'Channel router: route any inbound to the right AI employee with context'],
+    ['Channels', 'Per-channel access control (who can talk to whom)'],
+    // 5. Connectors
+    ['Connectors', 'Composio integration as the default connector path'],
+    ['Connectors', 'Multi-account support per app (3 Gmail, 2 Drive, each tagged)'],
+    ['Connectors', 'Account selection logic: which Gmail for which task, by employee + context'],
+    ['Connectors', 'Calendar (Google Calendar, multiple)'],
+    ['Connectors', 'Drive / Docs (Google Drive, multiple)'],
+    ['Connectors', 'Gmail (multiple inboxes)'],
+    ['Connectors', 'CRM (Notion, Airtable, HubSpot — pick one to start)'],
+    ['Connectors', 'Payments / billing (Stripe)'],
+    ['Connectors', 'Storage (S3 / R2 for files the AI produces)'],
+    ['Connectors', 'Custom MCP servers for the bits Composio doesn\'t cover'],
+    // 6. AI Employees
+    ['Employees', 'Employee definition format (role, voice, skills, connectors, schedule, channels)'],
+    ['Employees', 'Marta (assistant — first use case)'],
+    ['Employees', 'Template for spinning up a new employee from a brief'],
+    ['Employees', 'Inter-employee handoff (Marta asks research employee for deep-dive)'],
+    ['Employees', 'Shared org context all employees read (company brief, current projects)'],
+    // 7. Triggers
+    ['Triggers', 'Cron-based recurring jobs (daily briefing, weekly review)'],
+    ['Triggers', 'Event triggers (new email matching X, calendar event in 10 min)'],
+    ['Triggers', 'Manual triggers from a channel ("Marta, do X")'],
+    ['Triggers', 'One-shot scheduled tasks ("remind me at 3pm")'],
+    ['Triggers', 'Trigger conflict resolution (two triggers firing at once)'],
+    // 8. Knowledge
+    ['Knowledge', 'Vector index of project docs, past outputs, brand voice files'],
+    ['Knowledge', 'RAG over the knowledge base for any employee'],
+    ['Knowledge', 'Per-project knowledge isolation'],
+    ['Knowledge', 'Auto-ingest from Drive / Notion when a doc changes'],
+    // 9. Dashboard
+    ['Dashboard', 'Live view of running agents and their tasks'],
+    ['Dashboard', 'Cost / usage per employee'],
+    ['Dashboard', 'Logs and traces per task'],
+    ['Dashboard', 'Kill switch + pause per employee'],
+    ['Dashboard', 'Approval queue for high-stakes actions'],
+    // 10. Safety
+    ['Safety', 'Per-employee permissions: which tools, data, channels'],
+    ['Safety', 'Human-in-the-loop for irreversible actions (email, payments, deletes)'],
+    ['Safety', 'Prompt injection defense on inbound channels (Telegram, email)'],
+    ['Safety', 'Secrets management (never store keys in agent context)'],
+    ['Safety', 'Audit log of every external action'],
+    // 11. Identity
+    ['Identity', 'Per-channel allowlist of who I\'m talking to'],
+    ['Identity', 'Multi-tenant ready (later — Rui first)'],
+    ['Identity', 'Service account separation: each Composio account = distinct identity'],
+    // 12. Voice
+    ['Voice', 'Brand voice files'],
+    ['Voice', 'Voice enforcement: every external output passes a voice check'],
+    ['Voice', 'Per-channel formatting (Telegram terse, email longer)'],
+    // 13. Observability
+    ['Observability', 'Structured logs per agent run'],
+    ['Observability', 'Latency, token, and cost metrics'],
+    ['Observability', 'Failure alerting (a job didn\'t run, an integration broke)'],
+    ['Observability', 'Replay: re-run a past task with the same inputs'],
+  ];
+
+  const LAYERS = [...new Set(SEED.map(([l]) => l))];
+  const STORE_KEY = 'aios.roadmap.v1';
+
+  function seedBoard() {
+    return SEED.map(([layer, text], i) => ({
+      id: 'seed-' + i,
+      layer,
+      text,
+      column: 'todo',
+    }));
+  }
+
+  let tasks = JSON.parse(localStorage.getItem(STORE_KEY) || 'null') || seedBoard();
+  let filter = 'all';
+
+  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }
+  function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+
+  // --- filter chips
+  const $filterRow = document.getElementById('filter-row');
+  LAYERS.forEach(l => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.dataset.layer = l;
+    b.textContent = l;
+    $filterRow.appendChild(b);
+  });
+  $filterRow.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    [...$filterRow.querySelectorAll('.chip')].forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    filter = chip.dataset.layer;
+    render();
+  });
+
+  // --- render
+  function render() {
+    const cols = ['todo', 'doing', 'done'];
+    const visible = tasks.filter(t => filter === 'all' ? true : t.layer === filter);
+
+    cols.forEach(col => {
+      const body = document.querySelector(`[data-body="${col}"]`);
+      body.innerHTML = '';
+      const items = visible.filter(t => t.column === col);
+      if (items.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.textContent = col === 'todo' ? 'nothing queued' : col === 'doing' ? 'nothing in flight' : 'nothing shipped';
+        body.appendChild(hint);
+      } else {
+        items.forEach(t => body.appendChild(renderCard(t)));
+      }
+      document.querySelector(`[data-count="${col}"]`).textContent = tasks.filter(t => t.column === col).length;
+    });
+
+    document.getElementById('stat-total').textContent = tasks.length;
+    document.getElementById('stat-doing').textContent = tasks.filter(t => t.column === 'doing').length;
+    document.getElementById('stat-done').textContent = tasks.filter(t => t.column === 'done').length;
+  }
+
+  function renderCard(t) {
+    const el = document.createElement('div');
+    el.className = 'task';
+    el.draggable = true;
+    el.dataset.id = t.id;
+    el.innerHTML = `
+      <div class="layer"><span class="layer-name">${escapeHtml(t.layer)}</span><span>#${escapeHtml(t.id.slice(-4))}</span></div>
+      <div class="text">${escapeHtml(t.text)}</div>
+      <div class="actions">
+        <button class="act" data-move="todo">← Todo</button>
+        <button class="act" data-move="doing">Doing</button>
+        <button class="act" data-move="done">Done →</button>
+        <button class="act del" data-del="1">✕</button>
+      </div>
+    `;
+    el.addEventListener('dragstart', (e) => {
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', t.id);
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+
+    el.querySelectorAll('[data-move]').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const target = b.dataset.move;
+        if (t.column === target) return;
+        t.column = target;
+        save(); render();
+      });
+    });
+    el.querySelector('[data-del]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      tasks = tasks.filter(x => x.id !== t.id);
+      save(); render();
+    });
+    return el;
+  }
+
+  // --- drag & drop on columns
+  document.querySelectorAll('.column').forEach(col => {
+    col.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', (e) => {
+      if (e.target === col) col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', (e) => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      t.column = col.dataset.col;
+      save(); render();
+    });
+  });
+
+  // --- add card
+  document.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', () => {
+      const text = prompt('Task text:');
+      if (!text || !text.trim()) return;
+      const layer = prompt('Layer (' + LAYERS.join(', ') + '):', 'Runtime');
+      if (!layer) return;
+      tasks.unshift({
+        id: 'u-' + Math.random().toString(36).slice(2, 8),
+        layer: layer.trim(),
+        text: text.trim(),
+        column: b.dataset.add,
+      });
+      save(); render();
+    });
+  });
+
+  // --- reset
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!confirm('Reset board to seed? This wipes your moves and added cards.')) return;
+    tasks = seedBoard();
+    save(); render();
+    toast('Board reset to seed');
+  });
+
+  // --- toast
+  function toast(msg) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2400);
+  }
+
+  render();
+</script>
+</body>
+</html>
