@@ -253,6 +253,42 @@
   .card.create .desc { color: var(--mute); }
   .card.create .foot { color: var(--accent); border-top-color: var(--accent); }
 
+  /* Worker card actions */
+  .card .actions {
+    display: flex; gap: 8px; margin-top: 14px;
+  }
+  .card .act {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 8px 12px;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.18s ease;
+  }
+  .card .act:hover { border-color: var(--paper); }
+  .card .act.primary { border-color: var(--accent); color: var(--accent); }
+  .card .act.primary:hover { background: var(--accent); color: var(--ink); }
+  .card .act.danger:hover { border-color: #d94d4d; color: #d94d4d; }
+  .card .act:disabled { opacity: 0.4; cursor: progress; }
+  .card.active-card { box-shadow: inset 3px 0 0 var(--good); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--ink-2); border: 1px solid var(--accent);
+    color: var(--paper); padding: 14px 18px;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    z-index: 300; opacity: 0; transform: translateY(8px);
+    transition: all 0.25s ease;
+    max-width: 380px;
+  }
+  .toast.show { opacity: 1; transform: none; }
+  .toast .path { color: var(--mute); display: block; margin-top: 4px; letter-spacing: 0; text-transform: none; font-size: 11px; }
+
   /* Modal */
   .modal-backdrop {
     position: fixed; inset: 0;
@@ -483,7 +519,8 @@
     const visible = workers.filter(w => filter === 'all' ? true : w.status === filter);
     visible.forEach((w, i) => {
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'card' + (w.status === 'active' ? ' active-card' : '');
+      card.dataset.id = w.id;
       card.innerHTML = `
         <div class="head">
           <div class="role">// ${escapeHtml(w.role)}</div>
@@ -493,7 +530,13 @@
         <p class="desc">${escapeHtml(w.desc)}</p>
         <div class="foot">
           <span class="status ${w.status}"><span class="dot"></span>${w.status}</span>
-          <span>${w.channels || '—'}</span>
+          <span>${escapeHtml(w.channels || '—')}</span>
+        </div>
+        <div class="actions">
+          ${w.status === 'active'
+            ? `<button class="act danger" data-action="deactivate" data-id="${w.id}">Deactivate</button>`
+            : `<button class="act primary" data-action="activate" data-id="${w.id}">Activate →</button>`
+          }
         </div>
       `;
       $roster.appendChild(card);
@@ -542,6 +585,60 @@
     localStorage.setItem(STORE_KEY, JSON.stringify(workers));
     closeModal();
     render();
+  });
+
+  // --- toast
+  function toast(msg, path) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = `${escapeHtml(msg)}${path ? `<span class="path">${escapeHtml(path)}</span>` : ''}`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3200);
+  }
+
+  // --- activate / deactivate
+  $roster.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button.act');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const w = workers.find(x => x.id === id);
+    if (!w) return;
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = action === 'activate' ? 'Spinning up…' : 'Removing…';
+    try {
+      if (action === 'activate') {
+        const res = await fetch('/api/activate', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name: w.name, role: w.role, desc: w.desc, channels: w.channels }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'failed');
+        w.status = 'active';
+        w.slug = data.slug;
+        w.agentPath = data.path;
+        toast('Subagent activated', data.path);
+      } else {
+        const res = await fetch('/api/deactivate', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ slug: w.slug || w.name }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'failed');
+        w.status = 'idle';
+        toast('Subagent deactivated');
+      }
+      localStorage.setItem(STORE_KEY, JSON.stringify(workers));
+      render();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = original;
+      toast('Error: ' + err.message);
+    }
   });
 
   // --- filters
